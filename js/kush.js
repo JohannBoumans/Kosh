@@ -1,15 +1,20 @@
 // CONNEXION SOCKET
 let userId = chrome.runtime.id; // ID OF USER = ID GENERATE BY CHROME EXTENSION
-// let socket = io.connect('http://127.0.0.1:3000');
+let socket = io.connect('http://127.0.0.1:3000');
 //let socket = io.connect('https://www.logicosh.be');
-let socket = io.connect('https://logicosh.fr');
+//let socket = io.connect('https://logicosh.fr');
 
 let value_scroll = 0;
 
 if(socket !== undefined){
+    // SEND STATUS AND USER VALUE TO SERVER
     socket.emit('status_changed',{status_value:1, id:userId} )
+    // SEND USER_ID AND CURRENT URL THATS GOING TO BE KOSHED
     socket.emit('check_url',{url : window.location.href, id : userId });
+    console.log('statuschanged_checkurl')
+
     socket.on('url_checked',()=>{
+        console.log('ON url_checked')
         // Obtenir une référence au premier enfant
         var theFirstChild = document.body.firstChild;
         // Créer un nouvel élément

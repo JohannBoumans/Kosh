@@ -29,12 +29,12 @@ function removeDuplicates(table_url) {
 
 
 
-
 // ON RECOIT LES DONNEES DU SERVEUR POUR l'INTITIALISATION
 socket.on('rep_init_popup', (data)=>{
+    console.log('ON rep_init_popup')
     console.log('--->', data)
     for(let x = 0; x < tab_input_status.length; x++){
-        if(data.res[0].status == tab_input_status[x].dataset.status){
+        if(data.res[0].status === tab_input_status[x].dataset.status){
             tab_input_status[x].classList.add('status_selected');
         }
     }
@@ -46,9 +46,8 @@ socket.on('rep_init_popup', (data)=>{
             // ON GERE L'AFFICHAGE DES GROUPES
         let ligne_gr = document.createElement('div');
         let grp_status = 'red';
-        if(data.res[0].groupes[i].status == 1){grp_status = 'green'}
+        if(data.res[0].groupes[i].status == 1){grp_status = 'green green_gr'}
         console.log(data);
-
 
 
         let html_option_dossier = '<option class="option_dossier" value="'+ data.res[0].groupes[i].dossier +'">'+ data.res[0].groupes[i].dossier +'</option>';
@@ -91,7 +90,7 @@ socket.on('rep_init_popup', (data)=>{
 
     // let option_dossier = document.getElementsByClassName('option_dossier');
     let select_dossier = document.getElementById('select_dossier');
-        select_dossier.addEventListener('focusout', ()=>{
+        select_dossier.addEventListener('change', ()=>{
             socket.emit('change_dossier', {id:id, dossier:select_dossier.value});
            document.getElementById('rep_groupe').innerHTML = "";
            document.getElementById('result_my_activity').innerHTML = "";
@@ -107,10 +106,10 @@ socket.on('rep_init_popup', (data)=>{
     let div_info_gr = document.getElementsByClassName('div_info_gr');
     let y = 0;
     for(let x = div_info_gr.length - 1; x > -1 ;x--){
-        tab_span_see_info_gr[x].addEventListener('click', ()=>{
+        tab_span_see_info_gr[x].addEventListener('click', () => {
             div_info_gr[x].classList.toggle('none');
         })
-        table_url = [];
+        let table_url = [];
         if(data.kosh_gr[x]){
         for(let i =0 ; i<data.kosh_gr[x].length; i++){
             div_info_gr[y].innerHTML = div_info_gr[y].innerHTML + '<div class="ligne_info_gr"><a class="a_source_gr gris-clair" href="'+data.kosh_gr[x][i].url+'">'+ data.kosh_gr[x][i].texte+'</a></div>';
@@ -144,8 +143,8 @@ for(let i = 0; i < a_source.length; i++){
 
     let div_status_grp = document.getElementsByClassName('div_status_grp');
     for(let x = 0; x < div_status_grp.length; x++){
-        div_status_grp[x].addEventListener('click', function(){
-     
+        div_status_grp[x].addEventListener('click', function (){
+            // désactiver groupes puis activer status groupe 1 pour eviter multi groupe activé
             socket.emit('changed_status_gr',{id:id,id_gr: div_status_grp[x].dataset.group});
         })
     }
@@ -322,10 +321,10 @@ chrome.tabs.executeScript({
         })
 
 
-    socket.on('init_back', () => {
-        div_gr.innerHTML = '';
-        socket.emit('init_popup', id);
-    });
+            socket.on('init_back', () => {
+                div_gr.innerHTML = '';
+                socket.emit('init_popup', id);
+            });
 
             for(let p = 0; p < tab_input_status.length; p++){
                 tab_input_status[p].addEventListener('click', ()=>{
@@ -335,6 +334,7 @@ chrome.tabs.executeScript({
             }
 
             socket.on('rep_status_changed',(data)=>{
+                console.log('ON rep_status_changed')
                 for(let p = 0; p < tab_input_status.length; p++){
                     tab_input_status[p].classList.remove('status_selected'); 
                     if(tab_input_status[p].dataset.status == data){
@@ -382,7 +382,14 @@ let value_span_1 = 1;
 
 
 btn_add_gr.addEventListener('click', ()=>{
+    // Vérifier que les inputs ne sont pas vides avant de emit car sinon risque pb avec bdd après
     socket.emit('new_groupe', {name : input_nom_gr.value, description: input_description_gr.value, id:id, span_1 : value_span_1, span_2 : value_span_2})
+    // Faudra peut etre vider la value des inputs avant display none, vérifier
+    //input_nom_gr.value = '';
+   //input_description_gr.value = '';
+    //value_span_1 = ''; // OU 1?
+    //value_span_2 = ''; // OU 1?
+    //div_add_gr.style.display = 'none'
 })
 
 
@@ -395,6 +402,23 @@ btn_join_group.addEventListener('click', ()=>{
   socket.emit('join_group',{id_group : input_join_group.value, id_client : id} ) ;
   input_join_group.value = '';
 })
+
+// ON GERE L'AJOUT DE DOSSIER
+
+let input_new_dossier = document.getElementById('input_new_dossier');
+let btn_new_dossier = document.getElementById('btn_new_dossier');
+let id_gr_dossier = 0;
+let nom_new_dossier = '';
+btn_new_dossier.addEventListener('click', ()=>{
+  nom_new_dossier = input_new_dossier.value;
+  console.log(document.getElementsByClassName('green_gr'), 'idgrdossier')
+  return;
+  id_gr_dossier = document.getElementsByClassName('green_gr')[0].dataset.group;
+
+  socket.emit('add_new_dossier', {id_gr: id_gr_dossier, nom_dossier:  nom_new_dossier });
+
+})
+
 
 // ON GERE LE SYSTEME DE RECHERCHE DES GROUPES
 let btn_search_gr = document.getElementById('btn_search_gr');
@@ -550,7 +574,7 @@ socket.on('copy_mine',(data)=>{
        // console.log(string_to_copy);
     }
     else{
-        div_result_copy.innerHTML = "Il n'y rien de koshée sur la page que vous visitez";
+        div_result_copy.innerHTML = "Il n'y a rien de koshé sur la page que vous visitez";
     }
 })
 
