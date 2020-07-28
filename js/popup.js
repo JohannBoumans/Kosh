@@ -6,7 +6,8 @@ let current_url = chrome.tabs.getSelected(null,function(tab) {
 });
    let socket = io.connect('http://127.0.0.1:3000');
   //let socket = io.connect('https://logicosh.fr');
-// let socket = io.connect('https://www.logicosh.be');
+ //let socket = io.connect('https://www.logicosh.be');
+
 // INITIALISATION, ON EMIT NOS DONNES AU SERVEUR
 socket.emit('init_popup', id);
 
@@ -39,7 +40,7 @@ socket.on('rep_init_popup', (data)=>{
         }
     }
     // ON TRAITE L'AFFICHAGE DES GROUPES A l'INITIATION
-    
+
     for(let i = 0; i < data.res[0].groupes.length; i++){
         console.log('EN TRAVAIL')
         let v = data.res[0].groupes.length - i;
@@ -49,7 +50,6 @@ socket.on('rep_init_popup', (data)=>{
         if(data.res[0].groupes[i].status == 1){grp_status = 'green green_gr'}
         console.log(data);
 
-
         let html_option_dossier = '<option class="option_dossier" value="'+ data.res[0].groupes[i].dossier +'">'+ data.res[0].groupes[i].dossier +'</option>';
         console.log('EN TEST--->', data.res[0].groupes[i].dossier);
         for(let k = 0; k<data.gr[i].dossier.length;k++){
@@ -57,10 +57,19 @@ socket.on('rep_init_popup', (data)=>{
             html_option_dossier = html_option_dossier + '<option class="option_dossier" value="'+data.gr[i].dossier[k] +'">'+data.gr[i].dossier[k] +'</option>';
         }}
 
-   
+
+        // On affiche le changement de dossier que sur le groupe actif car bug avec changement de dossier groupe pas actif
+        let select_folder;
+
+        grp_status === 'green green_gr' ? select_folder = '<select id="select_dossier">' +  html_option_dossier + '</select>' : select_folder = '';
 
 
 
+        /*select_folder = '<select id="select_dossier">'
+                            +  html_option_dossier +
+                        '</select>'*/
+
+                                                  /*  Pas oublier d'afficher la croix qui delete UNIQUEMENT si le l'id du groupe = a un groupe du user ? */
         ligne_gr.innerHTML =    '<div class="flex-row">\
                                     <div class="tr_gr tr_delete">\
                                         <img src="../img/cross.png" class="img_cross img_delete" data-name="'+ data.res[0].groupes[i].id +'"/>\
@@ -70,11 +79,9 @@ socket.on('rep_init_popup', (data)=>{
                                         <div class="tr_gr"> '+ data.gr[i].name +' </div> \
                                         <div class="tr_gr tr_description">'+ data.gr[i].description +' </div>\
                                     </div>\
-                                    <div class="tr_gr tr_dossier">\
-                                        <select id="select_dossier">'
-                                          + html_option_dossier +
-                                        '</select>\
-                                    </div>\
+                                    <div class="tr_gr tr_dossier">'
+                                          +  select_folder +
+                                    '</div>\
                                        \
                                     <div data-group="'+ data.res[0].groupes[i].id +'" class="div_status_grp tr_gr ' + grp_status + '"></div>\
                                 </div>\
@@ -90,7 +97,7 @@ socket.on('rep_init_popup', (data)=>{
 
     // let option_dossier = document.getElementsByClassName('option_dossier');
     let select_dossier = document.getElementById('select_dossier');
-        select_dossier.addEventListener('change', ()=>{
+        select_dossier.addEventListener('change', () => {
             socket.emit('change_dossier', {id:id, dossier:select_dossier.value});
            document.getElementById('rep_groupe').innerHTML = "";
            document.getElementById('result_my_activity').innerHTML = "";
@@ -142,10 +149,12 @@ for(let i = 0; i < a_source.length; i++){
     }
 
     let div_status_grp = document.getElementsByClassName('div_status_grp');
+
     for(let x = 0; x < div_status_grp.length; x++){
         div_status_grp[x].addEventListener('click', function (){
-            // désactiver groupes puis activer status groupe 1 pour eviter multi groupe activé
+            // désactiver groupes puis activer status groupe 1 pour eviter multi groupe activé ?
             socket.emit('changed_status_gr',{id:id,id_gr: div_status_grp[x].dataset.group});
+            //socket.emit('init_back');
         })
     }
 
@@ -328,7 +337,7 @@ chrome.tabs.executeScript({
 
             for(let p = 0; p < tab_input_status.length; p++){
                 tab_input_status[p].addEventListener('click', ()=>{
-                    status_value = tab_input_status[p].dataset.status;
+                    let status_value = tab_input_status[p].dataset.status;
                     socket.emit('status_changed',{status_value, id} );
                 })
             }
@@ -397,8 +406,9 @@ btn_add_gr.addEventListener('click', ()=>{
 let btn_join_group = document.getElementById('btn_join_gr');
 let input_join_group = document.getElementById('input_join_gr');
 
-btn_join_group.addEventListener('click', ()=>{
+btn_join_group.addEventListener('click', () => {
     console.log('group join')
+    // ATTENTION INPUT JOIN GROUP = string input et pas ID GROUP
   socket.emit('join_group',{id_group : input_join_group.value, id_client : id} ) ;
   input_join_group.value = '';
 })
@@ -409,10 +419,10 @@ let input_new_dossier = document.getElementById('input_new_dossier');
 let btn_new_dossier = document.getElementById('btn_new_dossier');
 let id_gr_dossier = 0;
 let nom_new_dossier = '';
-btn_new_dossier.addEventListener('click', ()=>{
+btn_new_dossier.addEventListener('click', () => {
   nom_new_dossier = input_new_dossier.value;
   console.log(document.getElementsByClassName('green_gr'), 'idgrdossier')
-  return;
+  //return;
   id_gr_dossier = document.getElementsByClassName('green_gr')[0].dataset.group;
 
   socket.emit('add_new_dossier', {id_gr: id_gr_dossier, nom_dossier:  nom_new_dossier });
