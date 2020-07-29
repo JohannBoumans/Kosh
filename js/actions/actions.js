@@ -205,7 +205,6 @@ module.exports = {
 
   },
 
-
   checkUrl: (socket, users) => {
     //CHECK IF URL IS DISABLE OF NOT
     socket.on('check_url', async (data) => {
@@ -511,7 +510,7 @@ module.exports = {
     })
   },
 
-  input: (socket, client, kosh, users, kosh_gr, mongoose) => {
+  input: (socket, client, kosh, users, kosh_gr) => {
     // WHEN USER UNDERLINE SOMETHING --> QUAND QUELQU'UN KOSH QQCH
     socket.on('input', async (data) => {
       //try {
@@ -697,6 +696,5 @@ module.exports = {
       })*/
     });
   },
-
 
 };

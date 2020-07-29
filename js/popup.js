@@ -74,7 +74,6 @@ socket.on('rep_init_groups', (data) => {
                             +  html_option_dossier +
                         '</select>'*/
 
-                                                  /*  Pas oublier d'afficher la croix qui delete UNIQUEMENT si le l'id du groupe = a un groupe du user ? */
         ligne_gr.innerHTML =    '<div class="flex-row">\
                                     <div class="tr_gr tr_delete">\
                                         <img src="../img/cross.png" class="img_cross img_delete" data-name="'+ data.res[0].groupes[i].id +'"/>\
@@ -136,13 +135,13 @@ socket.on('rep_init_groups', (data) => {
     }
 }
 
-let a_source = document.getElementsByClassName('a_source_gr');
-for(let i = 0; i < a_source.length; i++){
-    a_source[i].addEventListener('click', function(){   
-         socket.emit('change_url_status',{user: id, url: a_source[i].href, on:1});
-        chrome.tabs.create({"url":a_source[i].href,"selected":true});
-    })
-}
+    let a_source = document.getElementsByClassName('a_source_gr');
+    for(let i = 0; i < a_source.length; i++){
+        a_source[i].addEventListener('click', function(){
+             socket.emit('change_url_status',{user: id, url: a_source[i].href, on:1});
+            chrome.tabs.create({"url":a_source[i].href,"selected":true});
+        })
+    }
    
 
     let img_delete = document.getElementsByClassName('img_delete');
@@ -159,14 +158,12 @@ for(let i = 0; i < a_source.length; i++){
       //ON ACTIVE LE CLIC DE L'ACTIVATION DU GROUPE SUR LES BOUTON ROUGE ET PAS SUR LES BOUTONS VERT POUR EMPECHER D'AVOIR 0 GROUPES ACTIFS
 
        const activeGroup = () => {
+         console.log('CLICKKKKK')
          socket.emit('changed_status_gr',{id:id,id_gr: div_status_grp[x].dataset.group});
        };
 
-       if(div_status_grp[x].classList.contains('red')) {
-         div_status_grp[x].addEventListener('click', activeGroup)
-       }else if(div_status_grp[x].classList.contains('green')){
-         div_status_grp[x].removeEventListener('click', activeGroup)
-       }
+       div_status_grp[x].addEventListener('click', activeGroup)
+
     }
 
     let div_wait = document.getElementById('div_wait');

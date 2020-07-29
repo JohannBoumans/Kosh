@@ -22,7 +22,7 @@ module.exports = {
 
         if(insertGroup){
           // UPDATE THE GROUPS OF THE CONCERN USER /// ICI QUE LE ALL MINUSCULE SE MET??? user update dossier: [All, General]??? Changement all en All// JAI CHANGE STATUS: 0
-          await users.updateOne({'user': data.id}, {$push: {groupes: {id: insertGroup.ops[0]._id, status: 0, dossier: "All"}}})
+          await users.updateOne({'user': data.id}, {$push: {groupes: {id: insertGroup.ops[0]._id, status: 1, dossier: "All"}}})
           console.log('user updated new_groupe')
           // SEND A INIT BACK FOR THE POPUP
           await socket.emit('init_back');
@@ -77,7 +77,7 @@ module.exports = {
 
         if (gr_found === 0) {
 
-          await users.updateOne({'user': data.id_client}, {$push: {groupes: {id: id_grp, status: 0, dossier: "All"}}});
+          await users.updateOne({user: data.id_client}, {$push: {groupes: {id: id_grp, status: 0, dossier: "All"}}});
 
           console.log('user updated join_group')
           socket.emit('init_back');
@@ -148,22 +148,26 @@ module.exports = {
         for (let x = 0; x < res[0].groupes.length; x++) {
           if (res[0].groupes[x].id == data.id_gr) {
             let status_final = 0;
+            console.log('IFFFF')
             if (res[0].groupes[x].status == 1) {
               status_final = 0;
+              console.log('INACTIVE')
             } else {
               status_final = 1;
+              console.log('ACTIVE')
             }
             obj_gr = {id: res[0].groupes[x].id, status: status_final, dossier: "All"};
 
           } else {
             obj_gr = {id: res[0].groupes[x].id, status: 0, dossier: "All"};
+            console.log('EEEELSSSEE')
           }
 
           tab_gr_final.push(obj_gr);
         }
 
 
-        const updateUser = await users.updateOne({'user': data.id}, {$set: {groupes: tab_gr_final}});
+        const updateUser = await users.updateOne({user: data.id}, {$set: {groupes: tab_gr_final}});
         console.log( updateUser,'updateUser change status group')
 
         socket.emit('init_back');
