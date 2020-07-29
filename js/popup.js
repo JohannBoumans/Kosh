@@ -9,7 +9,10 @@ let current_url = chrome.tabs.getSelected(null,function(tab) {
  //let socket = io.connect('https://www.logicosh.be');
 
 // INITIALISATION, ON EMIT NOS DONNES AU SERVEUR
-socket.emit('init_popup', id);
+
+socket.emit('init_activity', id);
+socket.emit('init_groups', id);
+
 
 let tab_input_status = document.getElementsByClassName('input_status');
 let div_gr = document.getElementById('rep_groupe');
@@ -29,11 +32,13 @@ function removeDuplicates(table_url) {
 
 
 
-
 // ON RECOIT LES DONNEES DU SERVEUR POUR l'INTITIALISATION
-socket.on('rep_init_popup', (data)=>{
-    console.log('ON rep_init_popup')
+socket.on('rep_init_groups', (data) => {
+    console.log('ON rep_init_groups')
     console.log('--->', data)
+
+    div_gr.innerHTML = '';
+
     for(let x = 0; x < tab_input_status.length; x++){
         if(data.res[0].status === tab_input_status[x].dataset.status){
             tab_input_status[x].classList.add('status_selected');
@@ -102,7 +107,7 @@ socket.on('rep_init_popup', (data)=>{
            document.getElementById('rep_groupe').innerHTML = "";
            document.getElementById('result_my_activity').innerHTML = "";
            document.getElementById('result_search').innerHTML = "";
-           socket.emit('init_popup', id);
+           socket.emit('init_groups', id);
             console.log('OPTION CLICKED', select_dossier.value)
         })
  
@@ -151,11 +156,17 @@ for(let i = 0; i < a_source.length; i++){
     let div_status_grp = document.getElementsByClassName('div_status_grp');
 
     for(let x = 0; x < div_status_grp.length; x++){
-        div_status_grp[x].addEventListener('click', function (){
-            // désactiver groupes puis activer status groupe 1 pour eviter multi groupe activé ?
-            socket.emit('changed_status_gr',{id:id,id_gr: div_status_grp[x].dataset.group});
-            //socket.emit('init_back');
-        })
+      //ON ACTIVE LE CLIC DE L'ACTIVATION DU GROUPE SUR LES BOUTON ROUGE ET PAS SUR LES BOUTONS VERT POUR EMPECHER D'AVOIR 0 GROUPES ACTIFS
+
+       const activeGroup = () => {
+         socket.emit('changed_status_gr',{id:id,id_gr: div_status_grp[x].dataset.group});
+       };
+
+       if(div_status_grp[x].classList.contains('red')) {
+         div_status_grp[x].addEventListener('click', activeGroup)
+       }else if(div_status_grp[x].classList.contains('green')){
+         div_status_grp[x].removeEventListener('click', activeGroup)
+       }
     }
 
     let div_wait = document.getElementById('div_wait');
@@ -208,7 +219,7 @@ chrome.tabs.executeScript({
 
 
  // INIT MY ACTIVITY
- socket.on('init_activity', (data)=>{
+ socket.on('rep_init_activity', (data)=>{
     let div_result_activity = document.getElementById('result_my_activity');
     div_result_activity.innerHTML = '';
     for(let x = 0; x< data.length; x++){
@@ -251,8 +262,9 @@ chrome.tabs.executeScript({
 
         btn_delete_activity[j].addEventListener( 'click', function(){
             console.log("EN TRAVAUX", '->USER = ',id, '->TEXTE =',a_info_activity[j].innerText, '->URL =',a_info_activity[j].href)
-        socket.emit('remove_kosh',{id_user:id, texte:a_info_activity[j].innerText.toLowerCase().trim(),  url :a_info_activity[j].href});
+            socket.emit('remove_kosh',{id_user:id, texte:a_info_activity[j].innerText.toLowerCase().trim(),  url :a_info_activity[j].href});
             div_ligne_activity[j].style.display = "none";
+            socket.emit('init_groups', id);
 
     } );
 
@@ -307,7 +319,7 @@ chrome.tabs.executeScript({
     let div_search_gr = document.getElementById('div_search_gr');
     let div_grps = document.getElementsByClassName('div_grps');
    
-   let remove_div_grps = function(){
+   const remove_div_search_grps = () => {
     for(let i = 0; i <div_grps.length; i++){
         div_grps[i].classList.add('none');
     }
@@ -315,24 +327,30 @@ chrome.tabs.executeScript({
    
   
 
-        icon_add.addEventListener('click', ()=>{
-            remove_div_grps();
+        icon_add.addEventListener('click', () => {
+            remove_div_search_grps();
+            div_result_search_gr.innerHTML = '';
+            input_search_gr.value = '';
             div_add_gr.classList.remove('none');
         })
-        icon_join.addEventListener('click', ()=>{
-            remove_div_grps();
+        icon_join.addEventListener('click', () => {
+            remove_div_search_grps();
+            div_result_search_gr.innerHTML = '';
+            input_search_gr.value = '';
             div_join_gr.classList.remove('none');
         })
 
-        icon_search.addEventListener('click', ()=>{
-            remove_div_grps();
+        icon_search.addEventListener('click', () => {
+            remove_div_search_grps();
+            div_result_search_gr.innerHTML = '';
+            input_search_gr.value = '';
             div_search_gr.classList.remove('none');
         })
 
 
             socket.on('init_back', () => {
                 div_gr.innerHTML = '';
-                socket.emit('init_popup', id);
+                socket.emit('init_groups', id);
             });
 
             for(let p = 0; p < tab_input_status.length; p++){
@@ -365,12 +383,12 @@ let span_mono = document.getElementsByClassName('span_input_mono');
 input_search.value = localStorage.getItem('recherche_value');
 
 let value_span_1 = 1;
-    span_public[0].addEventListener('click', ()=>{
+    span_public[0].addEventListener('click', () => {
          value_span_1 = 1;
          span_public[1].classList.remove('status_selected');
          span_public[0].classList.add('status_selected');
         })
-    span_public[1].addEventListener('click', ()=>{
+    span_public[1].addEventListener('click', () => {
          value_span_1 = 0;
          span_public[0].classList.remove('status_selected');
          span_public[1].classList.add('status_selected');
@@ -383,19 +401,25 @@ let value_span_1 = 1;
         span_mono[0].classList.add('status_selected');
     
     })
-    span_mono[1].addEventListener('click', ()=>{ 
+    span_mono[1].addEventListener('click', () => {
         value_span_2 = 0;
         span_mono[0].classList.remove('status_selected');
         span_mono[1].classList.add('status_selected');
     })
 
 
-btn_add_gr.addEventListener('click', ()=>{
+btn_add_gr.addEventListener('click', () => {
     // Vérifier que les inputs ne sont pas vides avant de emit car sinon risque pb avec bdd après
-    socket.emit('new_groupe', {name : input_nom_gr.value, description: input_description_gr.value, id:id, span_1 : value_span_1, span_2 : value_span_2})
+    if(input_nom_gr.value !== '' && input_description_gr.value !== ''){
+      socket.emit('new_groupe', {name : input_nom_gr.value, description: input_description_gr.value, id:id, span_1 : value_span_1, span_2 : value_span_2})
+      input_nom_gr.value = '';
+      input_description_gr.value = '';
+      div_add_gr.classList.add('none');
+    }
+
     // Faudra peut etre vider la value des inputs avant display none, vérifier
     //input_nom_gr.value = '';
-   //input_description_gr.value = '';
+    //input_description_gr.value = '';
     //value_span_1 = ''; // OU 1?
     //value_span_2 = ''; // OU 1?
     //div_add_gr.style.display = 'none'
@@ -426,7 +450,7 @@ btn_new_dossier.addEventListener('click', () => {
   id_gr_dossier = document.getElementsByClassName('green_gr')[0].dataset.group;
 
   socket.emit('add_new_dossier', {id_gr: id_gr_dossier, nom_dossier:  nom_new_dossier });
-
+  input_new_dossier.value = '';
 })
 
 
@@ -435,11 +459,17 @@ let btn_search_gr = document.getElementById('btn_search_gr');
 let input_search_gr = document.getElementById('search_gr')
 let div_result_search_gr = document.getElementById('div_result_search_gr');
 
-btn_search_gr.addEventListener('click', function(){
-    socket.emit('get_gr_search',{search : input_search_gr.value, id_client : id} ) ;
-})
+// Trouver moyen de rafraichir les données onchange et pas focus out
+input_search_gr.addEventListener('change', () => {
+  socket.emit('get_gr_search', {search: input_search_gr.value, id_client: id})
+});
 
-socket.on('result_gr_search', (data)=>{
+
+btn_search_gr.addEventListener('click', () => {
+    socket.emit('get_gr_search', {search : input_search_gr.value, id_client : id} ) ;
+});
+
+socket.on('result_gr_search', (data) => {
     console.log("retour result");
     div_result_search_gr.innerHTML = '';
     for(let x = 0; x< data.length; x++){
@@ -461,24 +491,24 @@ socket.on('result_gr_search', (data)=>{
 
 // EMIT FOR MINE SEARCH 
 let btn_search_mine = document.getElementById('btn_search_mine')
-btn_search_mine.addEventListener('click', ()=>{
+btn_search_mine.addEventListener('click', () => {
     localStorage.setItem('recherche_value', input_search.value.toLowerCase().trim());
     socket.emit('search_mine', {last_search:input_search.value.toLowerCase().trim(),id_client:chrome.runtime.id});
 })
 
 // EMIT SEARCH FOR ALL
-btn_search.addEventListener('click', ()=>{
+btn_search.addEventListener('click', () => {
     localStorage.setItem('recherche_value', input_search.value.toLowerCase().trim() );
     socket.emit('search_all', input_search.value.toLowerCase().trim());
 })
 // EMIT SEARCH FOR GRP
 let btn_search_grp = document.getElementById('btn_search_grp')
-btn_search_grp.addEventListener('click', ()=>{
+btn_search_grp.addEventListener('click', () => {
     localStorage.setItem('recherche_value', input_search.value.toLowerCase().trim());
     socket.emit('search_gr', {last_search:input_search.value.toLowerCase().trim(),id_client:chrome.runtime.id});
 })
 
-socket.on('result_search', (data)=>{
+socket.on('result_search', (data) => {
     console.log(data)
     div_result_search.innerHTML = '';
     for(let x = 0; x< data.length; x++){

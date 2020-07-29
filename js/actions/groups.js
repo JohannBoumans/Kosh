@@ -118,7 +118,7 @@ module.exports = {
 
       //try{
         let replace = data.search;
-        let re = new RegExp(replace, "g");
+        let re = new RegExp(replace, "gi");
 
         const res = await groupes.find({name: re}).limit(100).sort({_id: 1}).toArray();
 

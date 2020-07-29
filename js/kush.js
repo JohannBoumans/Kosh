@@ -277,8 +277,8 @@ if(socket !== undefined){
                     })
                 }
             }
-            
-            window.scrollTo(0,0);      
+            // J'ai enlevé pour eviter que ca remonte pour le moment
+            //window.scrollTo(0,0);
         }
         }
     });
@@ -329,7 +329,7 @@ if(socket !== undefined){
 
 if(document.getElementsByName('q')[0] != undefined && window.location.href.indexOf('google.') != -1 ){
     console.log( window.location.href)
-    document.body.addEventListener('click', ()=>{
+    document.body.addEventListener('click', () => {
         console.log( window.location.href)
        let google_search_bar = document.getElementsByName('q');
         // console.log(google_search_bar[0].value)

@@ -1,11 +1,28 @@
 
 module.exports = {
 
-  initPopup: (socket, users, groupes, kosh, kosh_gr, mongoose) => {
-    // INIT OF POPUP.HTML ---> data = id of client
-    socket.on('init_popup', async (data) => {
+  initActivity: (socket, kosh) => {
 
-      //try {
+      socket.on('init_activity', async (data) => {
+        // INIT MY ACTIVITY
+        try{
+          const activity = await kosh.find({user: data}).sort({_id: -1}).limit(10).toArray();
+          socket.emit('rep_init_activity', activity);
+
+        }catch (e) {
+          console.error(e.message, 'ERRORRR INIT ACTIIVTY')
+        }
+      })
+
+  },
+
+  initGroups: (socket, users, groupes, kosh, kosh_gr, mongoose) => {
+    // INIT OF POPUP.HTML ---> data = id of client
+
+     socket.on('init_groups', async (data) => {
+
+       try {
+
         const res = await users.find({user: data}).limit(1).toArray();
 
         if (res === undefined || !res.length || res.length === 0) {
@@ -34,15 +51,15 @@ module.exports = {
 
             console.log(rep, 'REPPPP')
 
-              obj_gr_user = {
-                id: rep[0]._id,
-                name: rep[0].name,
-                description: rep[0].description,
-                public: rep[0].public,
-                contributor: rep[0].contributor,
-                dossier: rep[0].dossier
-              };
-              tab_name_gr.push(obj_gr_user);
+            obj_gr_user = {
+              id: rep[0]._id,
+              name: rep[0].name,
+              description: rep[0].description,
+              public: rep[0].public,
+              contributor: rep[0].contributor,
+              dossier: rep[0].dossier
+            };
+            tab_name_gr.push(obj_gr_user);
 
 
             //console.log('EN TRAVAIL --->', tab_name_gr)
@@ -60,7 +77,7 @@ module.exports = {
 
                 if (x == res[0].groupes.length - 1) {
                   // EMIT A OBJECT WITH {res:info_about_user, gr: info_about_groups, kosh_gr: text_koshed_from_groups}
-                  socket.emit('rep_init_popup', {res: res, gr: tab_name_gr, kosh_gr: tab_kosh_gr});
+                  socket.emit('rep_init_groups', {res: res, gr: tab_name_gr, kosh_gr: tab_kosh_gr});
                   console.log('TRAVAIL1');
                 }
 
@@ -73,7 +90,7 @@ module.exports = {
                 if (x == res[0].groupes.length - 1) {
 
                   // EMIT A OBJECT WITH {res:info_about_user, gr: info_about_groups, kosh_gr: text_koshed_from_groups}
-                  socket.emit('rep_init_popup', {res: res, gr: tab_name_gr, kosh_gr: tab_kosh_gr});
+                  socket.emit('rep_init_groups', {res: res, gr: tab_name_gr, kosh_gr: tab_kosh_gr});
                   console.log('TRAVAIL2');
                 }
 
@@ -82,102 +99,112 @@ module.exports = {
 
           }
         }
-        // INIT MY ACTIVITY
+
+       }catch (e) {
+         console.error(e)
+       }
+
+
+
+
+        /*// INIT MY ACTIVITY
         const activity = await kosh.find({user: data}).sort({_id: -1}).limit(10).toArray();
-        socket.emit('init_activity', activity);
-      /*}catch (e) {
-        console.error(e)
-      }*/
-
-      /*console.log(data, 'data')
-      // FIND USER WHO REQUESTED INFORMATIONS
-      users.find({user: data}).limit(1).toArray(function (err, res) {
-
-        if (res === undefined || !res.length || res.length === 0) {
-          // CREATE NEW USER IF IT WAS NOT THE CASE --> NEED TO CHANGE PLACE
-          users.insertOne({user: data, status: 1, groupes: [], url_rm: []}, function () {
-            console.log('user added init pop');
-          })
-        }
-        let obj_gr_user = {};
-        let tab_name_gr = [];
-        let tab_kosh_gr = [];
-        // HANDLE THE GROUPS OF USER
+        socket.emit('init_activity', activity);*/
 
 
-        //res[0].groupes undefined au demarrage car pas de user? passe pas dans la condition au dessus
-        //let groupes;
-        //res[0].groupes !== undefined ? groupes = res[0].groupes : groupes = [];
+        /*console.log(data, 'data')
+        // FIND USER WHO REQUESTED INFORMATIONS
+        users.find({user: data}).limit(1).toArray(function (err, res) {
 
-        if(res[0] !== undefined){
-          console.log(res[0], 'res0')
-          for (let x = 0; x < res[0].groupes.length; x++) {
-            // SELECT GROUPS OF USER IN DATABASE
-
-            groupes.find({_id: res[0].groupes[x].id}).limit(1).toArray(function (errr, rep) {
-
-              obj_gr_user = {
-                id: rep[0]._id,
-                name: rep[0].name,
-                description: rep[0].description,
-                public: rep[0].public,
-                contributor: rep[0].contributor,
-                dossier: rep[0].dossier
-              };
-              tab_name_gr.push(obj_gr_user);
-              console.log('EN TRAVAIL --->', tab_name_gr)
-              // SELECT TEXTS KOSHED FROM GROUPES
-              if (res[0].groupes[x].dossier !== undefined) {
-                console.log(res[0].groupes[x].dossier, 'dossier')
-                //console.log('TRAVAIL0');
-
-
-                if (res[0].groupes[x].dossier.toLowerCase() !== 'all') {
-                  kosh_gr.find({$and: [{gr: res[0].groupes[x].id}, {dossier: res[0].groupes[x].dossier}]}).sort({_id: -1}).limit(10).toArray(function (error_kosh_gr, res_kosh_gr) {
-
-
-                    tab_kosh_gr.push(res_kosh_gr);
-                    // EMIT TO CLIENT IN THE LAST ITERATION
-
-                    if (x == res[0].groupes.length - 1) {
-
-                      // EMIT A OBJECT WITH {res:info_about_user, gr: info_about_groups, kosh_gr: text_koshed_from_groups}
-                      socket.emit('rep_init_popup', {res: res, gr: tab_name_gr, kosh_gr: tab_kosh_gr});
-                      console.log('TRAVAIL1');
-                    }
-
-                  })
-                } else {
-                  kosh_gr.find({gr: res[0].groupes[x].id}).sort({_id: -1}).limit(10).toArray(function (error_kosh_gr, res_kosh_gr) {
-
-
-                    tab_kosh_gr.push(res_kosh_gr);
-                    // EMIT TO CLIENT IN THE LAST ITERATION
-                    if (x == res[0].groupes.length - 1) {
-
-                      // EMIT A OBJECT WITH {res:info_about_user, gr: info_about_groups, kosh_gr: text_koshed_from_groups}
-                      socket.emit('rep_init_popup', {res: res, gr: tab_name_gr, kosh_gr: tab_kosh_gr});
-                      console.log('TRAVAIL2');
-                    }
-
-                  })
-
-                }
-              }
-
-
+          if (res === undefined || !res.length || res.length === 0) {
+            // CREATE NEW USER IF IT WAS NOT THE CASE --> NEED TO CHANGE PLACE
+            users.insertOne({user: data, status: 1, groupes: [], url_rm: []}, function () {
+              console.log('user added init pop');
             })
           }
-        }
+          let obj_gr_user = {};
+          let tab_name_gr = [];
+          let tab_kosh_gr = [];
+          // HANDLE THE GROUPS OF USER
 
 
+          //res[0].groupes undefined au demarrage car pas de user? passe pas dans la condition au dessus
+          //let groupes;
+          //res[0].groupes !== undefined ? groupes = res[0].groupes : groupes = [];
+
+          if(res[0] !== undefined){
+            console.log(res[0], 'res0')
+            for (let x = 0; x < res[0].groupes.length; x++) {
+              // SELECT GROUPS OF USER IN DATABASE
+
+              groupes.find({_id: res[0].groupes[x].id}).limit(1).toArray(function (errr, rep) {
+
+                obj_gr_user = {
+                  id: rep[0]._id,
+                  name: rep[0].name,
+                  description: rep[0].description,
+                  public: rep[0].public,
+                  contributor: rep[0].contributor,
+                  dossier: rep[0].dossier
+                };
+                tab_name_gr.push(obj_gr_user);
+                console.log('EN TRAVAIL --->', tab_name_gr)
+                // SELECT TEXTS KOSHED FROM GROUPES
+                if (res[0].groupes[x].dossier !== undefined) {
+                  console.log(res[0].groupes[x].dossier, 'dossier')
+                  //console.log('TRAVAIL0');
+
+
+                  if (res[0].groupes[x].dossier.toLowerCase() !== 'all') {
+                    kosh_gr.find({$and: [{gr: res[0].groupes[x].id}, {dossier: res[0].groupes[x].dossier}]}).sort({_id: -1}).limit(10).toArray(function (error_kosh_gr, res_kosh_gr) {
+
+
+                      tab_kosh_gr.push(res_kosh_gr);
+                      // EMIT TO CLIENT IN THE LAST ITERATION
+
+                      if (x == res[0].groupes.length - 1) {
+
+                        // EMIT A OBJECT WITH {res:info_about_user, gr: info_about_groups, kosh_gr: text_koshed_from_groups}
+                        socket.emit('rep_init_popup', {res: res, gr: tab_name_gr, kosh_gr: tab_kosh_gr});
+                        console.log('TRAVAIL1');
+                      }
+
+                    })
+                  } else {
+                    kosh_gr.find({gr: res[0].groupes[x].id}).sort({_id: -1}).limit(10).toArray(function (error_kosh_gr, res_kosh_gr) {
+
+
+                      tab_kosh_gr.push(res_kosh_gr);
+                      // EMIT TO CLIENT IN THE LAST ITERATION
+                      if (x == res[0].groupes.length - 1) {
+
+                        // EMIT A OBJECT WITH {res:info_about_user, gr: info_about_groups, kosh_gr: text_koshed_from_groups}
+                        socket.emit('rep_init_popup', {res: res, gr: tab_name_gr, kosh_gr: tab_kosh_gr});
+                        console.log('TRAVAIL2');
+                      }
+
+                    })
+
+                  }
+                }
+
+
+              })
+            }
+          }
+
+
+        })
+        // INIT MY ACTIVITY
+        kosh.find({user: data}).sort({_id: -1}).limit(10).toArray(function (err, res) {
+          socket.emit('init_activity', res);
+        })*/
       })
-      // INIT MY ACTIVITY
-      kosh.find({user: data}).sort({_id: -1}).limit(10).toArray(function (err, res) {
-        socket.emit('init_activity', res);
-      })*/
-    })
+
+
+
   },
+
 
   checkUrl: (socket, users) => {
     //CHECK IF URL IS DISABLE OF NOT

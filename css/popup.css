@@ -158,6 +158,7 @@ a{
 .img_cross{
     width:12px;
     height:12px;
+    cursor: pointer;
 }
 
 .hr_gr{
@@ -187,10 +188,12 @@ a{
 
 .green{
     background-color: #E2F0D9;
+    cursor: pointer;
 }
 
 .red{
     background-color: #FE9BB0;
+    cursor: pointer;
 }
 
 .span_input{cursor: pointer;}
