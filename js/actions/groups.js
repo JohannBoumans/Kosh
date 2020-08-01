@@ -145,7 +145,9 @@ module.exports = {
 
         let tab_gr_final = [];
         let obj_gr = {};
+
         for (let x = 0; x < res[0].groupes.length; x++) {
+          console.log(res[0].groupes[x].id, data.id_gr, 'IDGREEE')
           if (res[0].groupes[x].id == data.id_gr) {
             let status_final = 0;
             console.log('IFFFF')
@@ -157,7 +159,7 @@ module.exports = {
               console.log('ACTIVE')
             }
             obj_gr = {id: res[0].groupes[x].id, status: status_final, dossier: "All"};
-
+            console.log('END FIRST IF')
           } else {
             obj_gr = {id: res[0].groupes[x].id, status: 0, dossier: "All"};
             console.log('EEEELSSSEE')
@@ -167,8 +169,7 @@ module.exports = {
         }
 
 
-        const updateUser = await users.updateOne({user: data.id}, {$set: {groupes: tab_gr_final}});
-        console.log( updateUser,'updateUser change status group')
+        await users.updateOne({user: data.id}, {$set: {groupes: tab_gr_final}});
 
         socket.emit('init_back');
         console.log('user updated changed_status_gr + emit init_back')

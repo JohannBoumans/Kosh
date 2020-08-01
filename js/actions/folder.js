@@ -52,4 +52,30 @@ module.exports = {
     })
   },
 
+  deleteDossier: (socket, users, groupes, mongoose) => {
+    socket.on('delete_folder', async (data) => {
+      try{
+        const {id, folder} = data;
+        let idGr = mongoose.Types.ObjectId(id);
+        const groupe = await groupes.find({_id: idGr}).toArray();
+
+        let new_folders = [];
+        for (const dossier of groupe[0].dossier){
+          if(dossier != folder){
+            new_folders.push(dossier)
+          }
+        }
+        console.log(new_folders, 'NEW FOLDERSS')
+        await groupes.updateOne({ _id: idGr },{$set: { dossier: new_folders }});
+
+        await users.updateOne({'groupes.id': idGr}, {$set: {"groupes.$.dossier": 'All'}});
+
+        socket.emit('init_back')
+      }catch (e) {
+        console.error(e)
+      }
+
+    })
+  },
+
 };

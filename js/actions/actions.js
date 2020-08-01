@@ -41,15 +41,15 @@ module.exports = {
         //res[0].groupes !== undefined ? groupes = res[0].groupes : groupes = [];
 
         if(res[0] !== undefined){
-          console.log(res[0], 'res0')
+          //console.log(res[0], 'res0')
           for (let x = 0; x < res[0].groupes.length; x++) {
             // SELECT GROUPS OF USER IN DATABASE
-            console.log(res[0].groupes[x].id, 'OBJECTID')
+            //console.log(res[0].groupes[x].id, 'OBJECTID')
             let idGroup = mongoose.Types.ObjectId(res[0].groupes[x].id);
 
             const rep = await groupes.find({_id: res[0].groupes[x].id}).limit(1).toArray();
 
-            console.log(rep, 'REPPPP')
+            //console.log(rep, 'REPPPP')
 
             obj_gr_user = {
               id: rep[0]._id,

@@ -35,7 +35,7 @@ function removeDuplicates(table_url) {
 // ON RECOIT LES DONNEES DU SERVEUR POUR l'INTITIALISATION
 socket.on('rep_init_groups', (data) => {
     console.log('ON rep_init_groups')
-    console.log('--->', data)
+    //console.log('--->', data)
 
     div_gr.innerHTML = '';
 
@@ -53,7 +53,7 @@ socket.on('rep_init_groups', (data) => {
         let ligne_gr = document.createElement('div');
         let grp_status = 'red';
         if(data.res[0].groupes[i].status == 1){grp_status = 'green green_gr'}
-        console.log(data);
+        //console.log(data);
 
         let html_option_dossier = '<option class="option_dossier" value="'+ data.res[0].groupes[i].dossier +'">'+ data.res[0].groupes[i].dossier +'</option>';
         console.log('EN TEST--->', data.res[0].groupes[i].dossier);
@@ -63,16 +63,17 @@ socket.on('rep_init_groups', (data) => {
         }}
 
 
-        // On affiche le changement de dossier que sur le groupe actif car bug avec changement de dossier groupe pas actif
+        // On affiche le changement de dossier que sur le groupe actif pour le moment car bug avec changement de dossier groupe pas actif
         let select_folder;
 
-        grp_status === 'green green_gr' ? select_folder = '<select id="select_dossier">' +  html_option_dossier + '</select>' : select_folder = '';
+        grp_status === 'green green_gr' ? select_folder = '<select id="select_dossier">' +  html_option_dossier + '</select>' : select_folder = '<select id="select_dossier" style="opacity: 0; height: 0;">' +  html_option_dossier + '</select>';
 
 
 
         /*select_folder = '<select id="select_dossier">'
                             +  html_option_dossier +
                         '</select>'*/
+
 
         ligne_gr.innerHTML =    '<div class="flex-row">\
                                     <div class="tr_gr tr_delete">\
@@ -83,10 +84,12 @@ socket.on('rep_init_groups', (data) => {
                                         <div class="tr_gr"> '+ data.gr[i].name +' </div> \
                                         <div class="tr_gr tr_description">'+ data.gr[i].description +' </div>\
                                     </div>\
+                                    <div class="tr_gr tr_delete">\
+                                        <img src="../img/close.png" class="img_cross delete_folder" data-name="'+ data.res[0].groupes[i].id +'"/>\
+                                    </div>\
                                     <div class="tr_gr tr_dossier">'
                                           +  select_folder +
                                     '</div>\
-                                       \
                                     <div data-group="'+ data.res[0].groupes[i].id +'" class="div_status_grp tr_gr ' + grp_status + '"></div>\
                                 </div>\
                                 <div class="div_info_gr none"></div>';
@@ -153,9 +156,8 @@ socket.on('rep_init_groups', (data) => {
     }
 
     let div_status_grp = document.getElementsByClassName('div_status_grp');
-
+    console.log('FDPPPPPPPP')
     for(let x = 0; x < div_status_grp.length; x++){
-      //ON ACTIVE LE CLIC DE L'ACTIVATION DU GROUPE SUR LES BOUTON ROUGE ET PAS SUR LES BOUTONS VERT POUR EMPECHER D'AVOIR 0 GROUPES ACTIFS
 
        const activeGroup = () => {
          console.log('CLICKKKKK')
@@ -166,11 +168,25 @@ socket.on('rep_init_groups', (data) => {
 
     }
 
-    let div_wait = document.getElementById('div_wait');
-    div_wait.classList.add('none');
+
+    /*let div_wait = document.getElementById('div_wait');
+    div_wait.classList.add('none');*/
+
+
+    // DELETE DOSSIER
+    let delete_folder = document.getElementsByClassName('delete_folder');
+    for(const folder of delete_folder){
+      folder.addEventListener('click', () => {
+
+        socket.emit('delete_folder', {id: folder.dataset.name, folder: select_dossier.value })
+      })
+
+    }
+
    
 
 });
+
 
 // ON GERE LE URL ON
     let div_url_on = document.getElementById('div_url_on');
